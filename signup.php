@@ -3,19 +3,33 @@ $showAlert = false;
 $showError = false;
 if($_SERVER["REQUEST_METHOD"] == "POST"){
     include 'partials/_dbconnect.php';
-    $username = $_POST["username"];
+    $username = $_POST["username"]; //unique username at the backend
     $password = $_POST["password"];
     $cpassword = $_POST["cpassword"];
-    $exists = false;
-    if(($password == $cpassword) && $exists==false){
-        $sql = "INSERT INTO `users` ( `username`, `password`, `dt`) VALUES ('$username', '$password', current_timestamp())";
-        $result = mysqli_query($conn,$sql);
-        if ($result){
-            $showAlert = true;
-        }
+    //$exists = false;
+
+    //cheack whether this username exists
+    $existSql = "SELECT * FROM `users` WHERE username = '$username'";
+    $result = mysqli_query($conn, $existSql);
+    $numExistRows = mysqli_num_rows($result);
+    
+    if($numExistRows > 0){
+        // $exists = true;
+        $showError = "Username Already Exists!";
     }
     else{
-        $showError = "Passwords do not match";
+        // $exists = false;
+        if(($password == $cpassword)){
+            $hash = password_hash($password, PASSWORD_DEFAULT);
+            $sql = "INSERT INTO `users` ( `username`, `password`, `dt`) VALUES ('$username', '$hash', current_timestamp())";
+            $result = mysqli_query($conn, $sql);
+            if ($result){
+                $showAlert = true;
+            }
+        }
+        else{
+            $showError = "Passwords Do Not Match!";
+        }
     }
 }
 
@@ -60,13 +74,13 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             ">
                 <div class="form-group col-md-7">
                     <label for="username">Username</label>
-                    <input type="text" class="form-control" id="username" aria-describedby="emailHelp" name="username">
+                    <input type="text" maxlength="11" class="form-control" id="username" aria-describedby="emailHelp" name="username">
                     
                 </div>
 
                 <div class="form-group col-md-7">
                     <label for="password">Password</label>
-                    <input type="password" class="form-control" id="password"  name="password">
+                    <input type="password" maxlength="23" class="form-control" id="password"  name="password">
                 </div>
 
                 <div class="form-group col-md-7">
